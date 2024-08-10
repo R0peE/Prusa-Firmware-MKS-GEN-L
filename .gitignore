@@ -2,15 +2,13 @@
 /.settings
 /.project
 /.cproject
+/.vscode
 
 # cmake
 /build/
 /build_gen/
 /.dependencies
 /compile_commands.json
-
-# Temporary configuration
-/Firmware/Configuration_prusa.h
 
 # Temporary language files
 /lang/po/*.mo
@@ -24,6 +22,7 @@
 *.tmp
 *.bak
 .DS_Store
+._.DS_Store
 __pycache__
 
 # Generated files
