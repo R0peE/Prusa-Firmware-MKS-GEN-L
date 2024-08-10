@@ -25,7 +25,7 @@ mkdir build
 cd build
 cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=../cmake/AvrGcc.cmake -DFW_VARIANTS=MK25S-MKS-GEN-L
 ninja MK25S-MKS-GEN-L_ENGLISH
-avrdude -c stk500v2 -b 115200 -p atmega2560 -v -P /dev/ttyUSB0 -D -U ./MK25S-MKS-GEN-L_FW_3.14.0-BETA1_ENGLISH.hex
+avrdude -c stk500v2 -b 115200 -p atmega2560 -v -P /dev/ttyUSB0 -D -U ./MK25S-MKS-GEN-L_FW_3.14.0_ENGLISH.hex
 ```
 # Modified files
 Every modification starts and ends with /*MKS*/
@@ -36,8 +36,9 @@ Every modification starts and ends with /*MKS*/
 - pins.h
 - sm4.c
 - swi2c.c
-- temperature.cpp > OLD_BED_HEATER \
-Added:
+- temperature.cpp > OLD_BED_HEATER
+
+Added
 - pins_MKS_GEN_L.h
 - variants/MK25S-MKS-GEN-L.h
 
