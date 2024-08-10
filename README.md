@@ -40,4 +40,5 @@ Added: pins_MKS_GEN_L.h and variants/MK25S-MKS-GEN-L.h
 
 # Thanks to
 https://github.com/ghent360/Prusa-Firmware \
-https://github.com/cimoalpacino/Prusa-Firmware
+https://github.com/cimoalpacino/Prusa-Firmware \
+https://github.com/prusa3d/Prusa-Firmware
