@@ -36,6 +36,7 @@ Every modification starts and ends with /*MKS*/
 - pins.h
 - sm4.c
 - swi2c.c
+- temperature.cpp > OLD_BED_HEATER
 Added: pins_MKS_GEN_L.h and variants/MK25S-MKS-GEN-L.h
 
 # Thanks to
