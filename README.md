@@ -15,6 +15,7 @@ Prusa Firmware for MKS GEN L v2.0 board with TCM2208 drivers in standalone mode
 - MMU connection as (no port for it)
 - Silent mode (no digipots)
 - RPI port
+- Fancheck disabled
 
 # How to build and flash:
 ```
