@@ -8,6 +8,7 @@
 #include "language.h"
 #include "menu.h"
 #include "messages.h"
+#include "mmu2.h"
 #include "planner.h"
 #include "temperature.h"
 #include "ultralcd.h"
@@ -148,6 +149,7 @@ void Filament_sensor::triggerFilamentRemoved() {
 
 void Filament_sensor::filRunout() {
 //    SERIAL_ECHOLNPGM("filRunout");
+    sendHostNotification_P(MSG_FILAMENT_RUNOUT_DETECTED);
     runoutEnabled = false;
     autoLoadEnabled = false;
     stop_and_save_print_to_ram(0, 0);

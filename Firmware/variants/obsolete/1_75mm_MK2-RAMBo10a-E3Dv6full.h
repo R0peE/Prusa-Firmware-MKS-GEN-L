@@ -191,7 +191,13 @@ ADDITIONAL FEATURES SETTINGS
  HOST FEATURES
  *------------------------------------*/
 
-//#define HOST_SHUTDOWN              //Host supports "//action:shutdown" feature
+// Uncomment if the host supports '//action:shutdown'. It will add "Shutdown host" to the LCD meun. 
+//#define HOST_SHUTDOWN
+
+// Uncomment if the host doesn't support '//action:ready' & '//action:notready'.
+// This will replace the "Set Ready"/"Set not Ready" LCD menu entry with
+// "Print from host" and send '//action:start' instead.
+//#define REPLACE_SETREADY
 
 /*------------------------------------
 MOTOR CURRENT SETTINGS
@@ -252,9 +258,9 @@ BED SETTINGS
 //
 //#define BED_LIMIT_SWITCHING
 
-// This sets the max power delivered to the bed, and replaces the HEATER_BED_DUTY_CYCLE_DIVIDER option.
-// all forms of bed control obey this (PID, bang-bang, bang-bang with hysteresis)
-// setting this to anything other than 255 enables a form of PWM to the bed just like HEATER_BED_DUTY_CYCLE_DIVIDER did,
+// This sets the max power delivered to the bed.
+// All forms of bed control obey this (PID, bang-bang, bang-bang with hysteresis)
+// setting this to anything other than 255 enables a form of PWM to the bed,
 // so you shouldn't use it unless you are OK with PWM on your bed.  (see the comment on enabling PIDTEMPBED)
 #define MAX_BED_POWER 255 // limits duty cycle to bed; 255=full current
 

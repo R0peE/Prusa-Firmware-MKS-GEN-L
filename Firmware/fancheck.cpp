@@ -46,9 +46,9 @@ void setExtruderAutoFanState(uint8_t state)
 {
     //If bit 1 is set (0x02), then the hotend fan speed won't be adjusted according to temperature. Useful for forcing
     //the fan to either On or Off during certain tests/errors.
+
     fanState = state;
     newFanSpeed = 0;
-
     if (fanState & 0x01)
     {
 #ifdef EXTRUDER_ALTFAN_DETECT
@@ -149,7 +149,7 @@ void checkFanSpeed()
         lcd_reset_alert_level(); //for another fan speed error
         lcd_setstatuspgm(MSG_WELCOME); // Reset the status line message to visually show the error is gone
     }
-    if (fans_check_enabled && (fan_check_error == EFCE_OK))
+    if (fans_check_enabled && (fan_check_error != EFCE_REPORTED))
     {
         for (uint8_t fan = 0; fan < 2; fan++)
         {

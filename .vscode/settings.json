@@ -5,7 +5,6 @@
     "cmake.generator": "Ninja",
     "files.insertFinalNewline": true,
     "files.associations": {
-        "xlocale": "cpp",
-        "tone04.h": "c"
+        "xlocale": "cpp"
     }
 }

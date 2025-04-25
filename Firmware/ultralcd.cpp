@@ -2141,16 +2141,21 @@ static void lcd_unLoadFilament()
      preheat_or_continue(FilamentAction::UnLoad);
 }
 
-void lcd_wait_interact() {
+void lcd_wait_interact(const char* filament_name) {
 
   lcd_clear();
 
   lcd_puts_at_P(0, 0, _T(MSG_INSERT_FILAMENT));
+  lcd_set_cursor(0, 1);
+  if (filament_name[0]) {
+      lcd_print(filament_name);
+      lcd_set_cursor(0, 2);
+  }
 #ifdef FILAMENT_SENSOR
   if (!fsensor.getAutoLoadEnabled())
 #endif //FILAMENT_SENSOR
   {
-    lcd_puts_at_P(0, 1, _T(MSG_PRESS));
+    lcd_puts_P(_T(MSG_PRESS));
   }
 }
 
@@ -2187,12 +2192,15 @@ void lcd_loading_color() {
 }
 
 
-void lcd_loading_filament() {
-
+void lcd_loading_filament(const char* filament_name) {
 
   lcd_clear();
 
   lcd_puts_at_P(0, 0, _T(MSG_LOADING_FILAMENT));
+  if (filament_name[0]) {
+      lcd_set_cursor(0, 1);
+      lcd_print(filament_name);
+  }
   lcd_puts_at_P(0, 2, _T(MSG_PLEASE_WAIT));
   uint16_t slow_seq_time = (FILAMENTCHANGE_FINALFEED * 1000ul) / FILAMENTCHANGE_EFEED_FINAL;
   uint16_t fast_seq_time = (FILAMENTCHANGE_FIRSTFEED * 1000ul) / FILAMENTCHANGE_EFEED_FIRST;
@@ -3612,7 +3620,7 @@ void lcd_v2_calibration() {
 	if (MMU2::mmu2.Enabled()) {
 		const uint8_t filament = choose_menu_P(
 			_T(MSG_SELECT_FILAMENT),
-			_T(MSG_FILAMENT),(_T(MSG_CANCEL)+1)); //Hack to reuse MSG but strip 1st char off
+			MSG_FILAMENT,(_T(MSG_CANCEL)+1)); //Hack to reuse MSG but strip 1st char off
 		if (filament < MMU_FILAMENT_COUNT) {
 			lay1cal_filament = filament;
 		} else {
@@ -3740,6 +3748,22 @@ static void wizard_lay1cal_message(bool cold)
             _T(MSG_WIZARD_V2_CAL_2));
 }
 
+void lcd_z_calibration_prompt(bool allowTimeouting) {
+    uint8_t result = lcd_show_multiscreen_message_yes_no_and_wait_P(_T(MSG_Z_CALIBRATION_PROMPT), allowTimeouting, 0);
+    if (result == LCD_LEFT_BUTTON_CHOICE) {
+        lcd_mesh_calibration_z();
+    }
+}
+
+void prompt_steel_sheet_on_bed(bool wantedState) {
+#ifdef STEEL_SHEET
+    bool sheetIsOnBed = !lcd_show_multiscreen_message_yes_no_and_wait_P(_T(MSG_STEEL_SHEET_CHECK), false, !wantedState);
+    if (sheetIsOnBed != wantedState) {
+        lcd_show_fullscreen_message_and_wait_P(_T(wantedState ? MSG_PLACE_STEEL_SHEET : MSG_REMOVE_STEEL_SHEET));
+    }
+#endif //STEEL_SHEET
+}
+
 //! @brief Printer first run wizard (Selftest and calibration)
 //!
 //!
@@ -3857,10 +3881,6 @@ void lcd_wizard(WizState state)
 		case S::Z:
 			lcd_show_fullscreen_message_and_wait_P(_T(MSG_REMOVE_SHIPPING_HELPERS));
 			lcd_show_fullscreen_message_and_wait_P(_T(MSG_REMOVE_TEST_PRINT));
-			wizard_event = lcd_show_multiscreen_message_yes_no_and_wait_P(_T(MSG_STEEL_SHEET_CHECK), false);
-			if (wizard_event == LCD_MIDDLE_BUTTON_CHOICE) {
-				lcd_show_fullscreen_message_and_wait_P(_T(MSG_PLACE_STEEL_SHEET));
-			}
 			lcd_show_fullscreen_message_and_wait_P(_T(MSG_WIZARD_Z_CAL));
 			wizard_event = gcode_M45(true, 0);
 			if (!wizard_event) {
@@ -4206,45 +4226,6 @@ do\
 }\
 while (0)
 
-static void lcd_check_mode_set(void)
-{
-switch(oCheckMode)
-     {
-     case ClCheckMode::_None:
-          oCheckMode=ClCheckMode::_Warn;
-          break;
-     case ClCheckMode::_Warn:
-          oCheckMode=ClCheckMode::_Strict;
-          break;
-     case ClCheckMode::_Strict:
-          oCheckMode=ClCheckMode::_None;
-          break;
-     default:
-          oCheckMode=ClCheckMode::_None;
-     }
-eeprom_update_byte_notify((uint8_t*)EEPROM_CHECK_MODE,(uint8_t)oCheckMode);
-}
-
-#define SETTINGS_MODE \
-do\
-{\
-    switch(oCheckMode)\
-         {\
-         case ClCheckMode::_None:\
-              MENU_ITEM_TOGGLE_P(_T(MSG_NOZZLE), _T(MSG_NONE), lcd_check_mode_set);\
-              break;\
-         case ClCheckMode::_Warn:\
-              MENU_ITEM_TOGGLE_P(_T(MSG_NOZZLE), _T(MSG_WARN), lcd_check_mode_set);\
-              break;\
-         case ClCheckMode::_Strict:\
-              MENU_ITEM_TOGGLE_P(_T(MSG_NOZZLE), _T(MSG_STRICT), lcd_check_mode_set);\
-              break;\
-         default:\
-              MENU_ITEM_TOGGLE_P(_T(MSG_NOZZLE), _T(MSG_NONE), lcd_check_mode_set);\
-         }\
-}\
-while (0)
-
 static void lcd_nozzle_diameter_cycle(void) {
     uint16_t nDiameter;
     switch(oNozzleDiameter){
@@ -4286,91 +4267,66 @@ do\
 }\
 while (0)
 
-static void lcd_check_model_set(void)
-{
-switch(oCheckModel)
-     {
-     case ClCheckModel::_None:
-          oCheckModel=ClCheckModel::_Warn;
-          break;
-     case ClCheckModel::_Warn:
-          oCheckModel=ClCheckModel::_Strict;
-          break;
-     case ClCheckModel::_Strict:
-          oCheckModel=ClCheckModel::_None;
-          break;
-     default:
-          oCheckModel=ClCheckModel::_None;
-     }
-eeprom_update_byte_notify((uint8_t*)EEPROM_CHECK_MODEL,(uint8_t)oCheckModel);
+static void lcd_check_update_RAM(ClCheckMode * oCheckSetting) {
+    switch(*oCheckSetting) {
+        case ClCheckMode::_None:
+            *oCheckSetting = ClCheckMode::_Warn;
+            break;
+        case ClCheckMode::_Warn:
+            *oCheckSetting = ClCheckMode::_Strict;
+            break;
+        case ClCheckMode::_Strict:
+            *oCheckSetting = ClCheckMode::_None;
+            break;
+        default:
+            *oCheckSetting = ClCheckMode::_None;
+    }
 }
 
-#define SETTINGS_MODEL \
-do\
-{\
-    switch(oCheckModel)\
-         {\
-         case ClCheckModel::_None:\
-              MENU_ITEM_TOGGLE_P(_T(MSG_MODEL), _T(MSG_NONE), lcd_check_model_set);\
-              break;\
-         case ClCheckModel::_Warn:\
-              MENU_ITEM_TOGGLE_P(_T(MSG_MODEL), _T(MSG_WARN), lcd_check_model_set);\
-              break;\
-         case ClCheckModel::_Strict:\
-              MENU_ITEM_TOGGLE_P(_T(MSG_MODEL), _T(MSG_STRICT), lcd_check_model_set);\
-              break;\
-         default:\
-              MENU_ITEM_TOGGLE_P(_T(MSG_MODEL), _T(MSG_NONE), lcd_check_model_set);\
-         }\
-}\
-while (0)
-
-static void lcd_check_version_set(void)
-{
-switch(oCheckVersion)
-     {
-     case ClCheckVersion::_None:
-          oCheckVersion=ClCheckVersion::_Warn;
-          break;
-     case ClCheckVersion::_Warn:
-          oCheckVersion=ClCheckVersion::_Strict;
-          break;
-     case ClCheckVersion::_Strict:
-          oCheckVersion=ClCheckVersion::_None;
-          break;
-     default:
-          oCheckVersion=ClCheckVersion::_None;
-     }
-eeprom_update_byte_notify((uint8_t*)EEPROM_CHECK_VERSION,(uint8_t)oCheckVersion);
+static void lcd_check_mode_set() {
+    lcd_check_update_RAM(&oCheckMode);
+    eeprom_update_byte_notify((uint8_t*)EEPROM_CHECK_MODE,(uint8_t)oCheckMode);
 }
 
-#define SETTINGS_VERSION \
-do\
-{\
-    switch(oCheckVersion)\
-         {\
-         case ClCheckVersion::_None:\
-              MENU_ITEM_TOGGLE_P(MSG_FIRMWARE, _T(MSG_NONE), lcd_check_version_set);\
-              break;\
-         case ClCheckVersion::_Warn:\
-              MENU_ITEM_TOGGLE_P(MSG_FIRMWARE, _T(MSG_WARN), lcd_check_version_set);\
-              break;\
-         case ClCheckVersion::_Strict:\
-              MENU_ITEM_TOGGLE_P(MSG_FIRMWARE, _T(MSG_STRICT), lcd_check_version_set);\
-              break;\
-         default:\
-              MENU_ITEM_TOGGLE_P(MSG_FIRMWARE, _T(MSG_NONE), lcd_check_version_set);\
-         }\
-}\
-while (0)
+static void lcd_check_model_set() {
+    lcd_check_update_RAM(&oCheckModel);
+    eeprom_update_byte_notify((uint8_t*)EEPROM_CHECK_MODEL,(uint8_t)oCheckModel);
+}
+
+static void lcd_check_version_set() {
+    lcd_check_update_RAM(&oCheckVersion);
+    eeprom_update_byte_notify((uint8_t*)EEPROM_CHECK_VERSION,(uint8_t)oCheckVersion);
+}
+
+static void lcd_check_filament_set() {
+    lcd_check_update_RAM(&oCheckFilament);
+    eeprom_update_byte_notify((uint8_t*)EEPROM_CHECK_FILAMENT,(uint8_t)oCheckFilament);
+}
+
+static void settings_check_toggle(ClCheckMode * oCheckSetting, const char* msg, void (*func)(void)) {
+    switch(*oCheckSetting) {
+        case ClCheckMode::_None:
+            MENU_ITEM_TOGGLE_P(msg, _T(MSG_NONE), func);
+            break;
+        case ClCheckMode::_Warn:
+            MENU_ITEM_TOGGLE_P(msg, _T(MSG_WARN), func);
+            break;
+        case ClCheckMode::_Strict:
+            MENU_ITEM_TOGGLE_P(msg, _T(MSG_STRICT), func);
+            break;
+        default:
+            MENU_ITEM_TOGGLE_P(msg, _T(MSG_NONE), func);
+    }
+}
 
 static void lcd_checking_menu(void)
 {
     MENU_BEGIN();
     MENU_ITEM_BACK_P(_T(MSG_HW_SETUP));
-    SETTINGS_MODE;
-    SETTINGS_MODEL;
-    SETTINGS_VERSION;
+    settings_check_toggle(&oCheckMode, _T(MSG_NOZZLE), lcd_check_mode_set);
+    settings_check_toggle(&oCheckModel, _T(MSG_MODEL), lcd_check_model_set);
+    settings_check_toggle(&oCheckVersion, MSG_FIRMWARE, lcd_check_version_set);
+    settings_check_toggle(&oCheckFilament, MSG_FILAMENT, lcd_check_filament_set);
     MENU_END();
 }
 
@@ -4398,6 +4354,13 @@ static void sheets_menu()
 
 static void nozzle_change()
 {
+#ifdef FILAMENT_SENSOR
+    if (fsensor.isEnabled() && fsensor.getFilamentPresent()) {
+        lcd_show_fullscreen_message_and_wait_P(_T(MSG_UNLOAD_FILAMENT_REPEAT));
+        lcd_return_to_status();
+        return;
+    }
+#endif //FILAMENT_SENSOR
     lcd_commands_type = LcdCommands::NozzleCNG;
     lcd_return_to_status();
 }
@@ -4543,29 +4506,18 @@ static void lcd_settings_menu()
 }
 
 #ifdef TMC2130
-static void lcd_ustep_linearity_menu_save()
-{
-    eeprom_update_byte_notify((uint8_t*)EEPROM_TMC2130_WAVE_X_FAC, tmc2130_wave_fac[X_AXIS]);
-    eeprom_update_byte_notify((uint8_t*)EEPROM_TMC2130_WAVE_Y_FAC, tmc2130_wave_fac[Y_AXIS]);
-    eeprom_update_byte_notify((uint8_t*)EEPROM_TMC2130_WAVE_Z_FAC, tmc2130_wave_fac[Z_AXIS]);
-    eeprom_update_byte_notify((uint8_t*)EEPROM_TMC2130_WAVE_E_FAC, tmc2130_wave_fac[E_AXIS]);
-}
-#endif //TMC2130
+static void lcd_settings_linearity_correction_menu_save() {
+    for (uint8_t axis = 0; axis < NUM_AXIS; axis++) {
 
-#ifdef TMC2130
-static void lcd_settings_linearity_correction_menu_save()
-{
-    bool changed = false;
-    if (tmc2130_wave_fac[X_AXIS] < TMC2130_WAVE_FAC1000_MIN) tmc2130_wave_fac[X_AXIS] = 0;
-    if (tmc2130_wave_fac[Y_AXIS] < TMC2130_WAVE_FAC1000_MIN) tmc2130_wave_fac[Y_AXIS] = 0;
-    if (tmc2130_wave_fac[Z_AXIS] < TMC2130_WAVE_FAC1000_MIN) tmc2130_wave_fac[Z_AXIS] = 0;
-    if (tmc2130_wave_fac[E_AXIS] < TMC2130_WAVE_FAC1000_MIN) tmc2130_wave_fac[E_AXIS] = 0;
-    changed |= (eeprom_read_byte((uint8_t*)EEPROM_TMC2130_WAVE_X_FAC) != tmc2130_wave_fac[X_AXIS]);
-    changed |= (eeprom_read_byte((uint8_t*)EEPROM_TMC2130_WAVE_Y_FAC) != tmc2130_wave_fac[Y_AXIS]);
-    changed |= (eeprom_read_byte((uint8_t*)EEPROM_TMC2130_WAVE_Z_FAC) != tmc2130_wave_fac[Z_AXIS]);
-    changed |= (eeprom_read_byte((uint8_t*)EEPROM_TMC2130_WAVE_E_FAC) != tmc2130_wave_fac[E_AXIS]);
-    lcd_ustep_linearity_menu_save();
-    if (changed) tmc2130_init(TMCInitParams(false, FarmOrUserECool()));
+        if (tmc2130_wave_fac[axis] < TMC2130_WAVE_FAC1000_MIN) {
+            tmc2130_wave_fac[axis] = 0;
+        }
+
+        eeprom_update_byte_notify((uint8_t*)EEPROM_TMC2130_WAVE_X_FAC - axis, tmc2130_wave_fac[axis]);
+    }
+
+    // Re-init the TMC2130 driver to apply changes, if any
+    tmc2130_init(TMCInitParams(false, FarmOrUserECool()));
 }
 #endif //TMC2130
 
@@ -5059,7 +5011,11 @@ static void change_sheet()
     menu_back(3);
 }
 
-
+//! @brief Send a notification to the host. Param 'message' must reside in program memory!
+void sendHostNotification_P(const char* message)
+{
+    printf_P(MSG_HOST_ACTION_NOTIFICATION, message);
+}
 
 static void lcd_rename_sheet_menu()
 {
@@ -5150,6 +5106,7 @@ static void lcd_sheet_menu()
     MENU_END();
 }
 
+#ifndef REPLACE_SETREADY
 //! @brief Set printer state
 //! Sends the printer state for next print via LCD menu to host
 //! The host has to set the printer ready state with `M72` to keep printer in sync with the host
@@ -5163,6 +5120,7 @@ static void lcd_printer_ready_state_toggle()
         SERIAL_ECHOLNRPGM(MSG_HOST_ACTION_READY);
     }
 }
+#endif
 
 #ifdef HOST_SHUTDOWN
 static void lcd_shutdown_menu()
@@ -5258,16 +5216,24 @@ static void lcd_main_menu()
         MENU_ITEM_FUNCTION_P(_T(MSG_FILAMENTCHANGE), lcd_colorprint_change);//8
 
     if (!printer_recovering()) {
-        if ( moves_planned() || printer_active()) {
+        if ( moves_planned() || printer_active()
+#ifdef FANCHECK
+         || fan_check_error == EFCE_REPORTED
+#endif //End FANCHECK
+        ) {
             MENU_ITEM_SUBMENU_P(_T(MSG_TUNE), lcd_tune_menu);
         } else if (!Stopped) {
             MENU_ITEM_SUBMENU_P(_T(MSG_PREHEAT), lcd_preheat_menu);
             if (M79_timer_get_status()) {
+                #ifndef REPLACE_SETREADY
                 if(GetPrinterState() == PrinterState::IsReady) {
                     MENU_ITEM_FUNCTION_P(_T(MSG_SET_NOT_READY), lcd_printer_ready_state_toggle);
                 } else {
                     MENU_ITEM_FUNCTION_P(_T(MSG_SET_READY), lcd_printer_ready_state_toggle);
                 }
+                #else
+                    MENU_ITEM_FUNCTION_P(_T(MSG_HOSTPRINT), lcd_send_action_start);
+                #endif //REPLACE_SETREADY
             }
         }
         if (mesh_bed_leveling_flag == false && homing_flag == false && !printingIsPaused() && !processing_tcode) {
@@ -5358,11 +5324,12 @@ static void lcd_main_menu()
             } else {
 #ifdef FILAMENT_SENSOR
                 if (fsensor.isEnabled()) {
+                    if (!fsensor.getAutoLoadEnabled()) {
+                        MENU_ITEM_SUBMENU_P(_T(MSG_LOAD_FILAMENT), lcd_LoadFilament);
+                    }
                     if (!fsensor.getFilamentPresent()) {
                         if (fsensor.getAutoLoadEnabled()) {
                             MENU_ITEM_SUBMENU_P(_T(MSG_AUTOLOAD_FILAMENT), lcd_menu_AutoLoadFilament);
-                        } else {
-                            MENU_ITEM_SUBMENU_P(_T(MSG_LOAD_FILAMENT), lcd_LoadFilament);
                         }
                     } else {
                         MENU_ITEM_SUBMENU_P(_T(MSG_UNLOAD_FILAMENT), lcd_unLoadFilament);
@@ -5582,10 +5549,16 @@ static void lcd_mesh_bed_leveling_settings()
 
 	bool magnet_elimination = (eeprom_read_byte((uint8_t*)EEPROM_MBL_MAGNET_ELIMINATION) > 0);
 	uint8_t points_nr = eeprom_read_byte((uint8_t*)EEPROM_MBL_POINTS_NR);
-    uint8_t mbl_z_probe_nr = eeprom_read_byte((uint8_t*)EEPROM_MBL_PROBE_NR);
+	uint8_t mbl_z_probe_nr = eeprom_read_byte((uint8_t*)EEPROM_MBL_PROBE_NR);
 	char sToggle[4]; //enough for nxn format
 
 	MENU_BEGIN();
+	ON_MENU_LEAVE(
+		// Prompt user to run Z calibration for best results with region MBL.
+		if (points_nr == 7) {
+            lcd_z_calibration_prompt(true);
+		}
+	);
 	MENU_ITEM_BACK_P(_T(MSG_SETTINGS));
 	sToggle[0] = points_nr + '0';
 	sToggle[1] = 'x';
@@ -5750,9 +5723,8 @@ void print_stop(bool interactive, bool unconditional_stop)
         // Reset the sd status
         card.sdprinting = false;
         card.closefile();
-    } else {
-        SERIAL_ECHOLNRPGM(MSG_HOST_ACTION_CANCEL);
     }
+    SERIAL_ECHOLNRPGM(MSG_HOST_ACTION_CANCEL);
 
 #ifdef MESH_BED_LEVELING
     mbl.active = false;
@@ -6826,7 +6798,7 @@ static bool lcd_selftest_fsensor(void)
 static bool selftest_irsensor()
 {
     // Ask user which slot to load filament from
-    uint8_t slot = choose_menu_P(_T(MSG_SELECT_FILAMENT), _T(MSG_FILAMENT));
+    uint8_t slot = choose_menu_P(_T(MSG_SELECT_FILAMENT), MSG_FILAMENT);
 
     // Render self-test screen
     lcd_selftest_screen(TestScreen::Fsensor, 0, 1, true, 0);

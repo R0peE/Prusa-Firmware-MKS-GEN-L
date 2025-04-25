@@ -21,7 +21,6 @@
 #include "Configuration.h"
 #include "pins.h"
 #include "Timer.h"
-#include "mmu2.h"
 #include "printer_state.h"
 
 #ifndef AT90USB
@@ -63,8 +62,6 @@
 #else
   #define MYSERIAL MSerial
 #endif
-
-#include "lcd.h"
 
 #define SERIAL_PROTOCOL(x) (MYSERIAL.print(x))
 #define SERIAL_PROTOCOL_F(x,y) (MYSERIAL.print(x,y))
@@ -414,7 +411,7 @@ extern uint8_t calc_percent_done();
 /*enum MarlinBusyState {
 	NOT_BUSY,           // Not in a handler
 	IN_HANDLER,         // Processing a GCode
-	IN_PROCESS,         // Known to be blocking command input (as in G29)
+	IN_PROCESS,         // Known to be blocking command input
 	PAUSED_FOR_USER,    // Blocking pending any input
 	PAUSED_FOR_INPUT    // Blocking pending text input (concept)
 };*/
@@ -454,10 +451,10 @@ void gcode_M701(float fastLoadLength, uint8_t mmuSlotIndex);
 #define UVLO !(PINE & (1<<4))
 
 
-void M600_load_filament();
-void M600_load_filament_movements();
+void M600_load_filament(const char* filament_name);
+void M600_load_filament_movements(const char* filament_name);
 void M600_wait_for_user();
-bool M600_check_state_and_repeat();
+bool M600_check_state_and_repeat(const char* filament_name);
 void load_filament_final_feed();
 void marlin_wait_for_click();
 float raise_z(float delta);

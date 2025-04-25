@@ -5,7 +5,6 @@
 
 #include "Arduino.h"
 #include "macros.h"
-
 #define SYSTEM_TIMER_2
 
 #ifdef SYSTEM_TIMER_2
@@ -18,7 +17,6 @@
 #define _noTone noTone4
 
 #else //SYSTEM_TIMER_2
-#include "tone04.h"
 #define _millis millis
 #define _micros micros
 #define _delay delay
