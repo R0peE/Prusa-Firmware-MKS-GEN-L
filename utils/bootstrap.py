@@ -69,7 +69,6 @@ pip_dependencies = ["pyelftools","polib","regex"]
 def directory_for_dependency(dependency, version):
     return dependencies_dir / (dependency + '-' + version)
 
-
 def find_single_subdir(path: Path):
     members = list(path.iterdir())
     if path.is_dir() and len(members) > 1:
@@ -149,11 +148,9 @@ def install_dependency(dependency):
 def get_dependency_version(dependency):
     return dependencies[dependency]['version']
 
-
 def get_dependency_directory(dependency) -> Path:
     version = dependencies[dependency]['version']
     return Path(directory_for_dependency(dependency, version))
-
 
 def main() -> int:
     parser = ArgumentParser()
@@ -201,7 +198,6 @@ def main() -> int:
             '--disable-pip-version-check')
 
     return 0
-
 
 if __name__ == "__main__":
     sys.exit(main())
