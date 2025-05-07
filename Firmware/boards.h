@@ -8,7 +8,9 @@
 
 #define BOARD_EINSY_1_0a        310  // EINSy 1.0a     - 310 (new)
 /*MKS*/
-#define BOARD_MKS_GEN_L         34   // MKS Gen L 2.0
+#define BOARD_MKS_GEN_L         1113 // MKS Gen L 2.0
+#define BOARD_FYSETC_F6         1142 // FYSETC F6 1.4
+/*MKS*/
 
 #define MB(board) (MOTHERBOARD==BOARD_##board)
 #define IS_RAMPS (MB(RAMPS_OLD) || MB(RAMPS_13_EFB) || MB(RAMPS_13_EEB) || MB(RAMPS_13_EFF) || MB(RAMPS_13_EEF))

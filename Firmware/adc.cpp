@@ -31,7 +31,7 @@ static void adc_reset()
     #if (MOTHERBOARD != BOARD_MKS_GEN_L)
       static const uint8_t first_channel_idx = 0;
     #else
-      static const uint8_t first_channel_idx = 13;
+      static const uint8_t first_channel_idx = 12;
     #endif
     /*MKS*/
     static_assert((1 << first_channel_idx) & ADC_CHAN_MSK);

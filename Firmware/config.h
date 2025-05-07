@@ -8,7 +8,7 @@
 
 //ADC configuration
 /*MKS*/
-#if (MOTHERBOARD != BOARD_MKS_GEN_L)
+#if (MOTHERBOARD != BOARD_MKS_GEN_L) || (MOTHERBOARD != BOARD_FYSETC_F6)
     #if defined(FILAMENT_SENSOR) && (FILAMENT_SENSOR_TYPE == FSENSOR_IR_ANALOG)
     #define ADC_CHAN_MSK      0b0000001101011111 //used AD channels bit mask (0,1,2,3,4,6,8,9)
     #define ADC_DIDR_MSK      0b0000001001011111 //AD channels DIDR mask (1 ~ disabled digital input)
@@ -22,9 +22,9 @@
     #define ADC_CALLBACK      adc_callback //callback function ()
 #else
     /*MKS without PINDA thermistor*/
- 		#define ADC_CHAN_MSK      0b0110000000000000 //used AD channels bit mask (13 = TEMP_0_PIN, 14 = TEMP_BED_PIN)
-		#define ADC_DIDR_MSK      0b0110000000000000 //AD channels DIDR mask (1 ~ disabled digital input)
-		#define ADC_CHAN_CNT      2         //number of used channels)
+ 		#define ADC_CHAN_MSK      0b0111000000000000 //used AD channels bit mask (12 = TEMP_0_PIN fysetc, 13 = TEMP_0_PIN, 14 = TEMP_BED_PIN)
+		#define ADC_DIDR_MSK      0b0111000000000000 //AD channels DIDR mask (1 ~ disabled digital input)
+		#define ADC_CHAN_CNT      3         //number of used channels)
 		#define ADC_OVRSAMPL      16        //oversampling multiplier
 		#define ADC_CALLBACK      adc_callback //callback function ()
 #endif /*MKS*/
@@ -85,7 +85,7 @@
 
 //Community language support
 /*MKS*/
-#if (MOTHERBOARD != BOARD_MKS_GEN_L)
+#if (MOTHERBOARD != BOARD_MKS_GEN_L) || (MOTHERBOARD != BOARD_FYSETC_F6)
     #define COMMUNITY_LANG_GROUP 1
 #else
     #define COMMUNITY_LANG_GROUP 0

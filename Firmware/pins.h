@@ -20,9 +20,13 @@
 #endif //MOTHERBOARD == BOARD_EINSY_1_0a
 
 /*MKS*/
-#if MOTHERBOARD == BOARD_MKS_GEN_L //34
-	#include "pins_MKS_GEN_L.h"
+#if MOTHERBOARD == BOARD_MKS_GEN_L //1113
+#include "pins_MKS_GEN_L.h"
 #endif //MOTHERBOARD == BOARD_MKS_GEN_L
+
+#if MOTHERBOARD == BOARD_FYSETC_F6 //1142
+#include "pins_FYSETC_F6.h"
+#endif //MOTHERBOARD == BOARD_FYSETC_F6
 /*MKS*/
 
 #ifndef KNOWN_BOARD
