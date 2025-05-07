@@ -1,5 +1,5 @@
 # Prusa-Firmware-MKS-GEN-L
-Prusa Firmware for MKS GEN L v2.0 board with TCM2208 drivers in standalone mode
+Prusa Firmware for MKS GEN L v2.0, and Fysetc F6 1.3/1.4 boards with TCM2208 drivers in standalone mode
 
 # Functions that work
 - Setup wizard and XYZ calibration
@@ -25,11 +25,18 @@ mkdir build
 cd build
 cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=../cmake/AvrGcc.cmake -DFW_VARIANTS=MK25S-MKS-GEN-L
 ninja MK25S-MKS-GEN-L_ENGLISH
+
+or 
+
+cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=../cmake/AvrGcc.cmake -DFW_VARIANTS=MK25S-FYSETC-F6
+ninja MK25S-FYSETC-F6_ENGLISH
+
 avrdude -c stk500v2 -b 115200 -p atmega2560 -v -P /dev/ttyUSB0 -D -U ./MK25S-MKS-GEN-L_FW_3.14.0_ENGLISH.hex
 ```
 # Modified files
 Every modification starts and ends with `/*MKS*/`
 - adc.cpp
+- adc.h
 - boards.h
 - config.h
 - Marlin_main.cpp
@@ -40,7 +47,9 @@ Every modification starts and ends with `/*MKS*/`
 
 Added
 - pins_MKS_GEN_L.h
+- pins_FYSETC_F6.h
 - variants/MK25S-MKS-GEN-L.h
+- variants/MK25S-FYSETC-F6.h
 
 # Thanks to
 https://github.com/ghent360/Prusa-Firmware \
