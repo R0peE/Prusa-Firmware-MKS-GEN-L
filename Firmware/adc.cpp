@@ -28,10 +28,12 @@ void adc_init()
 static void adc_reset()
 {
     /*MKS*/
-    #if (MOTHERBOARD != BOARD_MKS_GEN_L)
-      static const uint8_t first_channel_idx = 0;
-    #else
+    #if MOTHERBOARD == BOARD_MKS_GEN_L
+      static const uint8_t first_channel_idx = 13;
+    #elif MOTHERBOARD == BOARD_FYSETC_F6
       static const uint8_t first_channel_idx = 12;
+    #else
+      static const uint8_t first_channel_idx = 0;
     #endif
     /*MKS*/
     static_assert((1 << first_channel_idx) & ADC_CHAN_MSK);

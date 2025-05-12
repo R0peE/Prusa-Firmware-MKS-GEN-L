@@ -1047,7 +1047,7 @@ void setup()
 	ultralcd_init();
 
 /*MKS*/
-#if (MOTHERBOARD != BOARD_MKS_GEN_L) || (MOTHERBOARD != BOARD_FYSETC_F6)
+#if (MOTHERBOARD != BOARD_MKS_GEN_L) && (MOTHERBOARD != BOARD_FYSETC_F6)
 	spi_init();
 #endif
 /*MKS*/
