@@ -96,7 +96,7 @@
 
 //#define TACH_0              -1 // !!! changed from 81 (EINY03)
 //#define TACH_1                 80 
-#define IR_SENSOR_PIN       9  // idler sensor @PK0 (digital pin 62/A8)
+#define IR_SENSOR_PIN       15  // idler sensor @PK0 (digital pin 62/A8)
 
 // This should be long enough to safely exit the bootloader when it uses the default timeout (~1-2s)
 #define WATCHDOG_SOFT_RESET_VALUE WDTO_2S
